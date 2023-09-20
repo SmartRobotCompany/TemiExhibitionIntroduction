@@ -1,4 +1,4 @@
-package com.smartrobot.temiexhibitionintroduction;
+package com.smartrobot.temidemointroduction;
 
 import org.junit.Test;
 

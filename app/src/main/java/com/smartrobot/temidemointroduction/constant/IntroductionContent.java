@@ -1,4 +1,4 @@
-package com.smartrobot.temiexhibitionintroduction;
+package com.smartrobot.temidemointroduction.constant;
 
 public interface IntroductionContent {
     String mg400_basic = "MG400是一台具備0.05mm重複精準度的桌上型工業機械手臂" +
