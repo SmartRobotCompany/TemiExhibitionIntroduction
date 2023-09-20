@@ -21,11 +21,13 @@ import androidx.fragment.app.Fragment;
 
 import com.smartrobot.temidemointroduction.R;
 import com.smartrobot.temidemointroduction.constant.VideoConstant;
+import com.smartrobot.temidemointroduction.listener.OnGoHomeBaseButtonClickListener;
 import com.smartrobot.temidemointroduction.listener.OnIntroductionButtonClickListener;
 
 
 public class MainTaskFragment extends Fragment {
     private static final String TAG = "Debug_" + MainTaskFragment.class.getSimpleName();
+    private Button go_homebase_button;
     private Button temi_introduction_button;
     private Button thouzer_introduction_button;
     private Button nova5_introduction_button;
@@ -33,11 +35,13 @@ public class MainTaskFragment extends Fragment {
     private ImageButton uri_permission_setting_imagebutton;
     private Context context;
     private OnIntroductionButtonClickListener onIntroductionButtonClickListener;
+    private OnGoHomeBaseButtonClickListener onGoHomeBaseButtonClickListener;
 
 
     public MainTaskFragment(Context context){
         this.context = context;
         this.onIntroductionButtonClickListener = (OnIntroductionButtonClickListener) context;
+        this.onGoHomeBaseButtonClickListener = (OnGoHomeBaseButtonClickListener) context;
     }
 
     @Nullable
@@ -51,6 +55,7 @@ public class MainTaskFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         Log.d(TAG, "onViewCreated: ");
+        go_homebase_button = view.findViewById(R.id.go_homebase_button);
         temi_introduction_button = view.findViewById(R.id.temi_introduction_button);
         thouzer_introduction_button = view.findViewById(R.id.thouzer_introduction_button);
         nova5_introduction_button = view.findViewById(R.id.nova5_introduction_button);
@@ -65,6 +70,7 @@ public class MainTaskFragment extends Fragment {
             }
         });
 
+        buttonOnClickActionSetting(go_homebase_button);
         buttonOnClickActionSetting(temi_introduction_button);
         buttonOnClickActionSetting(thouzer_introduction_button);
         buttonOnClickActionSetting(nova5_introduction_button);
@@ -96,24 +102,31 @@ public class MainTaskFragment extends Fragment {
             public void onClick(View view) {
                 String uriString = "";
                 switch (button.getId()){
+                    case R.id.go_homebase_button:
+                        onGoHomeBaseButtonClickListener.homeBaseButtonClick();
+                        break;
+
                     case R.id.temi_introduction_button:
                         uriString = VideoConstant.TEMI_VIDEO_URI_STRING;
+                        onIntroductionButtonClickListener.introductionButtonClick(uriString);
                         break;
 
                     case R.id.thouzer_introduction_button:
                         uriString = VideoConstant.THOUZER_VIDEO_URI_STRING;
+                        onIntroductionButtonClickListener.introductionButtonClick(uriString);
                         break;
 
                     case R.id.nova5_introduction_button:
                         uriString = VideoConstant.NOVA5_VIDEO_URI_STRING;
+                        onIntroductionButtonClickListener.introductionButtonClick(uriString);
                         break;
 
                     case R.id.Mg400_introduction_button:
                         uriString = VideoConstant.MG400_VIDEO_URI_STRING;
+                        onIntroductionButtonClickListener.introductionButtonClick(uriString);
                         break;
 
                 }
-                onIntroductionButtonClickListener.introductionButtonClick(uriString);
             }
         });
     }

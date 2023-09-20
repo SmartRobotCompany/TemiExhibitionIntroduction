@@ -27,6 +27,7 @@ import com.smartrobot.temidemointroduction.fragment.GifTaskFragment;
 import com.smartrobot.temidemointroduction.fragment.MainTaskFragment;
 import com.smartrobot.temidemointroduction.fragment.VideoTaskFragment;
 import com.smartrobot.temidemointroduction.listener.OnGifTaskFragmentActionListener;
+import com.smartrobot.temidemointroduction.listener.OnGoHomeBaseButtonClickListener;
 import com.smartrobot.temidemointroduction.listener.OnGoogleTtsStatusListener;
 import com.smartrobot.temidemointroduction.listener.OnIntroductionButtonClickListener;
 import com.smartrobot.temidemointroduction.listener.OnVideoPlayStatusListener;
@@ -46,7 +47,8 @@ public class MainActivity extends AppCompatActivity implements
         OnGoogleTtsStatusListener,
         OnVideoPlayStatusListener,
         OnIntroductionButtonClickListener,
-        OnGifTaskFragmentActionListener {
+        OnGifTaskFragmentActionListener,
+        OnGoHomeBaseButtonClickListener {
 
     static final String TAG = "Debug_" + MainActivity.class.getSimpleName();
 
@@ -242,19 +244,20 @@ public class MainActivity extends AppCompatActivity implements
                     randomGoToLocations.remove(s);
                 }
 
-                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        robot.setVolume(5);
-                        VideoTaskFragment videoTaskFragment =
-                                new VideoTaskFragment(MainActivity.this, currentUriString);
-                        getSupportFragmentManager().beginTransaction()
-                                .addToBackStack(MainTaskFragment.class.getSimpleName())
-                                .replace(R.id.fragment_container,videoTaskFragment)
-                                .commit();
-                    }
-                },1000);
-
+                if (!s.equals(TemiConstant.HOME_BASE)){
+                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            robot.setVolume(5);
+                            VideoTaskFragment videoTaskFragment =
+                                    new VideoTaskFragment(MainActivity.this, currentUriString);
+                            getSupportFragmentManager().beginTransaction()
+                                    .addToBackStack(MainTaskFragment.class.getSimpleName())
+                                    .replace(R.id.fragment_container,videoTaskFragment)
+                                    .commit();
+                        }
+                    },1000);
+                }
                 break;
 
             case OnGoToLocationStatusChangedListener.ABORT:
@@ -328,5 +331,10 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void gifTaskFragmentLoadFinish() {
         robotSpeak(IntroductionContent.videoFinishWord);
+    }
+
+    @Override
+    public void homeBaseButtonClick() {
+        robotGoTo(SpeedLevel.HIGH,TemiConstant.HOME_BASE);
     }
 }

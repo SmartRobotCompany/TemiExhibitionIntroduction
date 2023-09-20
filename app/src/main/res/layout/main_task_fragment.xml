@@ -20,55 +20,38 @@
             android:layout_height="wrap_content">
 
             <Button
-                android:id="@+id/temi_introduction_button"
-                android:layout_width="500dp"
+                android:id="@+id/go_homebase_button"
+                android:layout_width="450dp"
                 android:layout_height="450dp"
-                android:background="@drawable/button_setting"
-                android:drawableBottom="@drawable/mg400_tablet"
-                android:paddingBottom="35dp"
-                android:text="temi"
-                android:textAllCaps="false"
-                android:textAlignment="center"
-                android:textSize="55dp" />
+                android:background="@drawable/home_base_button"/>
+
+            <Button
+                android:id="@+id/temi_introduction_button"
+                android:layout_width="450dp"
+                android:layout_height="450dp"
+                android:layout_marginLeft="30dp"
+                android:background="@drawable/temi_introduction"/>
 
             <Button
                 android:id="@+id/thouzer_introduction_button"
-                android:layout_width="500dp"
+                android:layout_width="450dp"
                 android:layout_height="450dp"
-                android:layout_marginLeft="20dp"
-                android:background="@drawable/button_setting"
-                android:drawableBottom="@drawable/mg400_scale"
-                android:paddingBottom="35dp"
-                android:text="Doog Thouzer"
-                android:textAllCaps="false"
-                android:textAlignment="center"
-                android:textSize="55dp" />
+                android:layout_marginLeft="30dp"
+                android:background="@drawable/thouzer_introduction"/>
 
             <Button
                 android:id="@+id/nova5_introduction_button"
-                android:layout_width="500dp"
+                android:layout_width="450dp"
                 android:layout_height="450dp"
-                android:layout_marginLeft="20dp"
-                android:background="@drawable/button_setting"
-                android:drawableBottom="@drawable/mg400_router"
-                android:paddingBottom="35dp"
-                android:text="Nova5"
-                android:textAllCaps="false"
-                android:textAlignment="center"
-                android:textSize="55dp" />
+                android:layout_marginLeft="30dp"
+                android:background="@drawable/nova5_introduction"/>
 
             <Button
                 android:id="@+id/Mg400_introduction_button"
-                android:layout_width="500dp"
+                android:layout_width="450dp"
                 android:layout_height="450dp"
-                android:layout_marginLeft="20dp"
-                android:background="@drawable/button_setting"
-                android:drawableBottom="@drawable/cr5_inform"
-                android:paddingBottom="35dp"
-                android:text="Mg400"
-                android:textAllCaps="false"
-                android:textAlignment="center"
-                android:textSize="55dp" />
+                android:layout_marginLeft="30dp"
+                android:background="@drawable/mg400_introduction"/>
 
         </LinearLayout>
 
