@@ -1,5 +1,6 @@
 package com.smartrobot.temidemointroduction;
 
+import androidx.annotation.CheckResult;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
@@ -18,11 +19,14 @@ import com.robotemi.sdk.Robot;
 import com.robotemi.sdk.listeners.OnGoToLocationStatusChangedListener;
 import com.robotemi.sdk.listeners.OnRobotReadyListener;
 import com.robotemi.sdk.navigation.model.SpeedLevel;
+import com.robotemi.sdk.permission.Permission;
+import com.smartrobot.temidemointroduction.constant.IntroductionContent;
 import com.smartrobot.temidemointroduction.constant.TemiConstant;
 import com.smartrobot.temidemointroduction.constant.VideoConstant;
 import com.smartrobot.temidemointroduction.fragment.GifTaskFragment;
 import com.smartrobot.temidemointroduction.fragment.MainTaskFragment;
 import com.smartrobot.temidemointroduction.fragment.VideoTaskFragment;
+import com.smartrobot.temidemointroduction.listener.OnGifTaskFragmentActionListener;
 import com.smartrobot.temidemointroduction.listener.OnGoogleTtsStatusListener;
 import com.smartrobot.temidemointroduction.listener.OnIntroductionButtonClickListener;
 import com.smartrobot.temidemointroduction.listener.OnVideoPlayStatusListener;
@@ -31,6 +35,7 @@ import com.smartrobot.temidemointroduction.utilities.GoogleTtsUtilities;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -40,7 +45,8 @@ public class MainActivity extends AppCompatActivity implements
         OnRobotReadyListener,
         OnGoogleTtsStatusListener,
         OnVideoPlayStatusListener,
-        OnIntroductionButtonClickListener {
+        OnIntroductionButtonClickListener,
+        OnGifTaskFragmentActionListener {
 
     static final String TAG = "Debug_" + MainActivity.class.getSimpleName();
 
@@ -49,7 +55,7 @@ public class MainActivity extends AppCompatActivity implements
     private List<String> temiLocations;
     private List<String> randomGoToLocations = new ArrayList<>();
     public FragmentManager fragmentManager;
-    private int REQUEST_STORAGE_PERMISSION = 100;
+    private int REQUEST_STORAGE_PERMISSION = 2001;
     private GoogleTtsUtilities googleTtsUtilities;
     private String currentUriString;
 
@@ -60,8 +66,6 @@ public class MainActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_main);
         robot = Robot.getInstance();
         getSupportActionBar().hide();
-
-        checkStoragePermission();
 
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
@@ -79,6 +83,7 @@ public class MainActivity extends AppCompatActivity implements
         robot.addOnGoToLocationStatusChangedListener(this);
 
         fragmentManager = getSupportFragmentManager();
+        checkStoragePermission();
     }
 
     @Override
@@ -181,23 +186,42 @@ public class MainActivity extends AppCompatActivity implements
     public void onWindowFocusChanged(boolean hasFocus) {
         super.onWindowFocusChanged(hasFocus);
         if (hasFocus == true){
-            boolean hasMainFragmentOrNot = false;
-            List<Fragment> fragments = getSupportFragmentManager().getFragments();
-            for (Fragment fragment : fragments){
-                if (fragment instanceof MainTaskFragment){
-                    hasMainFragmentOrNot = true;
-                    break;
+            if (requestPermissionIfNeeded(Permission.SETTINGS,TemiConstant.REQUEST_CODE_TEMI_SETTING)){
+                return;
+            }else {
+                boolean hasMainFragmentOrNot = false;
+                List<Fragment> fragments = getSupportFragmentManager().getFragments();
+                for (Fragment fragment : fragments){
+                    if (fragment instanceof MainTaskFragment){
+                        hasMainFragmentOrNot = true;
+                        break;
+                    }
+                }
+
+                if (hasMainFragmentOrNot == false){
+                    MainTaskFragment mainTaskFragment = new MainTaskFragment(MainActivity.this);
+                    FragmentManager fragmentManager = getSupportFragmentManager();
+                    fragmentManager.beginTransaction()
+                            .replace(R.id.fragment_container,mainTaskFragment)
+                            .commit();
                 }
             }
 
-            if (hasMainFragmentOrNot == false){
-                MainTaskFragment mainTaskFragment = new MainTaskFragment(MainActivity.this);
-                FragmentManager fragmentManager = getSupportFragmentManager();
-                fragmentManager.beginTransaction()
-                        .replace(R.id.fragment_container,mainTaskFragment)
-                        .commit();
-            }
         }
+    }
+
+    @CheckResult
+    private boolean requestPermissionIfNeeded(Permission permission, int requestCode){
+
+        if (robot.checkSelfPermission(permission) == Permission.GRANTED){
+            //權限已經開啟
+            //如果有進到if執行這一行，則執行完這一行後就會跳出requestPermissionIfNeeded()這個方法，並不會執行if{}外的程式
+            return false;
+        }
+
+        //若權限沒有開啟，則請求開啟權限
+        robot.requestPermissions(Collections.singletonList(permission),requestCode);
+        return true;
     }
 
     @Override
@@ -221,6 +245,7 @@ public class MainActivity extends AppCompatActivity implements
                 new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                     @Override
                     public void run() {
+                        robot.setVolume(5);
                         VideoTaskFragment videoTaskFragment =
                                 new VideoTaskFragment(MainActivity.this, currentUriString);
                         getSupportFragmentManager().beginTransaction()
@@ -275,10 +300,9 @@ public class MainActivity extends AppCompatActivity implements
 
             case TemiConstant.GOOGLE_TTS_START:
                 if (!text.equals(TemiConstant.FINISH_INITIAL)){
-                    GifTaskFragment gifTaskFragment = new GifTaskFragment();
-                    getSupportFragmentManager().beginTransaction()
-                            .replace(R.id.fragment_container,gifTaskFragment)
-                            .commit();
+                    robot.setVolume(3);
+                }else {
+                    robot.setVolume(0);
                 }
                 break;
 
@@ -289,22 +313,20 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onVideoPlayEnded(String uriString) {
-        MainTaskFragment mainTaskFragment = new MainTaskFragment(MainActivity.this);
+        GifTaskFragment gifTaskFragment = new GifTaskFragment(MainActivity.this);
         getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container,mainTaskFragment)
+                .replace(R.id.fragment_container,gifTaskFragment)
                 .commit();
-        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                robotSpeak("產品介紹影片已經播放完畢，對產品有興趣的話，請洽詢現場的工作人員，謝謝");
-            }
-        },500);
-
     }
 
     @Override
     public void introductionButtonClick(String uriString) {
         currentUriString = uriString;
         temiRandomPatrol();
+    }
+
+    @Override
+    public void gifTaskFragmentLoadFinish() {
+        robotSpeak(IntroductionContent.videoFinishWord);
     }
 }

@@ -2,10 +2,8 @@ package com.smartrobot.temidemointroduction.constant;
 
 public interface TemiConstant {
 
-    int REQUEST_CODE_SETTING = 201;
-
-    //Temi Parameter
-    int REPOSE_TIME = 2000;
+    int REQUEST_CODE_STORAGE_PERMISSION = 2001;
+    int REQUEST_CODE_TEMI_SETTING = 2002;
 
     //Location of Task Mode
     String HOME_BASE = "home base";

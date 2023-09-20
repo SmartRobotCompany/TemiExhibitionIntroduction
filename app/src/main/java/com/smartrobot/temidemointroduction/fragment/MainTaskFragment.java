@@ -82,9 +82,11 @@ public class MainTaskFragment extends Fragment {
             new ActivityResultContracts.OpenDocument(), new ActivityResultCallback<Uri>() {
                 @Override
                 public void onActivityResult(Uri result) {
-                    Log.d(TAG, "onActivityResult: uri is " + result.toString());
-                    context.getContentResolver().takePersistableUriPermission(result,
-                            Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    if (result != null){
+                        Log.d(TAG, "onActivityResult: uri is " + result.toString());
+                        context.getContentResolver().takePersistableUriPermission(result,
+                                Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                    }
                 }
             });
 
