@@ -31,7 +31,7 @@ public class SpeechRecognizeUtilities {
     }
 
     private void  initModel(){
-        StorageService.unpack(context,"model-cn","model",
+        StorageService.unpack(context,"model-en-us","model",
                 (model) -> {this.model = model;},
                 (exception) -> Log.d(TAG, "initiModel: Failed to unpack the model" + exception.getMessage()));
         Toast.makeText(context,"OK",Toast.LENGTH_SHORT).show();

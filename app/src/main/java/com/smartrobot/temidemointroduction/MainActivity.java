@@ -395,17 +395,20 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onResult(String hypothesis) {
         JsonObject jsonObject = JsonParser
-                .parseString(hypothesis.replace(" ","").replace("\n","")).getAsJsonObject();
+                .parseString(hypothesis).getAsJsonObject();
         String text = jsonObject.get("text").getAsString();
         Log.d(TAG, "onResult: result is " + text);
         mainTaskFragment.setSpeechRecognizeResultInTextView(text);
-        if (hypothesis.contains("充电")){
+        
+        if (hypothesis.contains("charging") || 
+                hypothesis.contains("charge") || 
+                hypothesis.contains("charged")){
             robotGoTo(SpeedLevel.HIGH,TemiConstant.HOME_BASE);
             mainTaskFragment.stopSpeechRecognizeDetect();
-        }else if (hypothesis.contains("麦克")){
+        }else if (hypothesis.contains("mike")){
             robotSpeak("您好，我是邁克的服務型機器人");
             mainTaskFragment.stopSpeechRecognizeDetect();
-        } else if (hypothesis.contains("几点")) {
+        }else if (hypothesis.contains("time")){
             Calendar calendar = Calendar.getInstance();
             Date date = calendar.getTime();
             SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm");
@@ -415,13 +418,37 @@ public class MainActivity extends AppCompatActivity implements
             String speakWord = "現在是" + hour + "點" + minute + "分";
             robotSpeak(speakWord);
             mainTaskFragment.stopSpeechRecognizeDetect();
-        } else if (hypothesis.contains("您好") || hypothesis.contains("你好")){
+        }else if (hypothesis.contains("hello")){
             robotSpeak("您好，歡迎命令我替您做介紹");
             mainTaskFragment.stopSpeechRecognizeDetect();
-        } else if (hypothesis.contains("发财") || hypothesis.contains("新年快乐")){
-            robotSpeak("新年快樂，恭喜發財");
+        } else if (hypothesis.contains("merry christmas")) {
+            robotSpeak("聖誕快樂");
             mainTaskFragment.stopSpeechRecognizeDetect();
         }
+
+//        if (hypothesis.contains("充电")){
+//            robotGoTo(SpeedLevel.HIGH,TemiConstant.HOME_BASE);
+//            mainTaskFragment.stopSpeechRecognizeDetect();
+//        }else if (hypothesis.contains("麦克")){
+//            robotSpeak("您好，我是邁克的服務型機器人");
+//            mainTaskFragment.stopSpeechRecognizeDetect();
+//        } else if (hypothesis.contains("几点")) {
+//            Calendar calendar = Calendar.getInstance();
+//            Date date = calendar.getTime();
+//            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm");
+//            String[] timeParts = simpleDateFormat.format(date).split(":");
+//            String hour = timeParts[0];
+//            String minute = timeParts[1];
+//            String speakWord = "現在是" + hour + "點" + minute + "分";
+//            robotSpeak(speakWord);
+//            mainTaskFragment.stopSpeechRecognizeDetect();
+//        } else if (hypothesis.contains("您好") || hypothesis.contains("你好")){
+//            robotSpeak("您好，歡迎命令我替您做介紹");
+//            mainTaskFragment.stopSpeechRecognizeDetect();
+//        } else if (hypothesis.contains("发财") || hypothesis.contains("新年快乐")){
+//            robotSpeak("新年快樂，恭喜發財");
+//            mainTaskFragment.stopSpeechRecognizeDetect();
+//        }
     }
 
     @Override
