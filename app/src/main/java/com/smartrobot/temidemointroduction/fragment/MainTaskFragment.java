@@ -4,12 +4,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.TextView;
 
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
@@ -23,6 +26,10 @@ import com.smartrobot.temidemointroduction.R;
 import com.smartrobot.temidemointroduction.constant.VideoConstant;
 import com.smartrobot.temidemointroduction.listener.OnGoHomeBaseButtonClickListener;
 import com.smartrobot.temidemointroduction.listener.OnIntroductionButtonClickListener;
+import com.smartrobot.temidemointroduction.utilities.SpeechRecognizeUtilities;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
 public class MainTaskFragment extends Fragment {
@@ -32,10 +39,13 @@ public class MainTaskFragment extends Fragment {
     private Button thouzer_introduction_button;
     private Button nova5_introduction_button;
     private Button Mg400_introduction_button;
+    private Button voice_command_button;
     private ImageButton uri_permission_setting_imagebutton;
+    private TextView current_speech_recognize_textview;
     private Context context;
     private OnIntroductionButtonClickListener onIntroductionButtonClickListener;
     private OnGoHomeBaseButtonClickListener onGoHomeBaseButtonClickListener;
+    private SpeechRecognizeUtilities speechRecognizeUtilities;
 
 
     public MainTaskFragment(Context context){
@@ -60,7 +70,11 @@ public class MainTaskFragment extends Fragment {
         thouzer_introduction_button = view.findViewById(R.id.thouzer_introduction_button);
         nova5_introduction_button = view.findViewById(R.id.nova5_introduction_button);
         Mg400_introduction_button = view.findViewById(R.id.Mg400_introduction_button);
+        voice_command_button = view.findViewById(R.id.voice_command_button);
         uri_permission_setting_imagebutton = view.findViewById(R.id.uri_permission_setting_imagebutton);
+        current_speech_recognize_textview = view.findViewById(R.id.current_speech_recognize_textview);
+
+        current_speech_recognize_textview.setVisibility(View.INVISIBLE);
 
         uri_permission_setting_imagebutton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -75,13 +89,14 @@ public class MainTaskFragment extends Fragment {
         buttonOnClickActionSetting(thouzer_introduction_button);
         buttonOnClickActionSetting(nova5_introduction_button);
         buttonOnClickActionSetting(Mg400_introduction_button);
-
+        buttonOnClickActionSetting(voice_command_button);
     }
 
     @Override
     public void onStart() {
         super.onStart();
         Log.d(TAG, "onStart: ");
+        speechRecognizeUtilities = new SpeechRecognizeUtilities(context);
     }
 
     private final ActivityResultLauncher<String[]> videoFilePickerLauncher = registerForActivityResult(
@@ -126,8 +141,34 @@ public class MainTaskFragment extends Fragment {
                         onIntroductionButtonClickListener.introductionButtonClick(uriString);
                         break;
 
+                    case R.id.voice_command_button:
+                        current_speech_recognize_textview.setVisibility(View.VISIBLE);
+                        speechRecognizeUtilities.startSpeakRecognize();
+//                        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+//                            @Override
+//                            public void run() {
+//                                speechRecognizeUtilities.stopSpeakRecognize();
+//                            }
+//                        },8000);
+                        break;
+
                 }
             }
         });
+    }
+
+    public void stopSpeechRecognizeDetect(){
+        speechRecognizeUtilities.stopSpeakRecognize();
+        current_speech_recognize_textview.setVisibility(View.INVISIBLE);
+    }
+
+    public void setSpeechRecognizeResultInTextView(String text){
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                current_speech_recognize_textview.setText(text);
+            }
+        });
+
     }
 }

@@ -15,6 +15,10 @@ import android.speech.tts.Voice;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.robotemi.sdk.Robot;
 import com.robotemi.sdk.listeners.OnGoToLocationStatusChangedListener;
 import com.robotemi.sdk.listeners.OnRobotReadyListener;
@@ -34,9 +38,13 @@ import com.smartrobot.temidemointroduction.listener.OnVideoPlayStatusListener;
 import com.smartrobot.temidemointroduction.utilities.GoogleTtsUtilities;
 
 import org.jetbrains.annotations.NotNull;
+import org.vosk.android.RecognitionListener;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -48,7 +56,8 @@ public class MainActivity extends AppCompatActivity implements
         OnVideoPlayStatusListener,
         OnIntroductionButtonClickListener,
         OnGifTaskFragmentActionListener,
-        OnGoHomeBaseButtonClickListener {
+        OnGoHomeBaseButtonClickListener,
+        RecognitionListener {
 
     static final String TAG = "Debug_" + MainActivity.class.getSimpleName();
 
@@ -58,8 +67,10 @@ public class MainActivity extends AppCompatActivity implements
     private List<String> randomGoToLocations = new ArrayList<>();
     public FragmentManager fragmentManager;
     private int REQUEST_STORAGE_PERMISSION = 2001;
+    private int REQUEST_RECORD_AUDIO = 2002;
     private GoogleTtsUtilities googleTtsUtilities;
     private String currentUriString;
+    private MainTaskFragment mainTaskFragment;
 
 
     @Override
@@ -86,6 +97,7 @@ public class MainActivity extends AppCompatActivity implements
 
         fragmentManager = getSupportFragmentManager();
         checkStoragePermission();
+        checkRecordAudioPermission();
     }
 
     @Override
@@ -112,6 +124,18 @@ public class MainActivity extends AppCompatActivity implements
     protected void onDestroy() {
         super.onDestroy();
         Log.d(TAG, "onDestroy: ");
+    }
+
+    private void removeFragment(){
+        List<Fragment> fragments = getSupportFragmentManager().getFragments();
+        for (Fragment fragment : fragments){
+            if (fragment instanceof GifTaskFragment ||
+                    fragment instanceof VideoTaskFragment){
+                getSupportFragmentManager().beginTransaction().remove(fragment).commit();
+                Log.d(TAG, "removeFragment: remove");
+                break;
+            }
+        }
     }
     private void locationInitial(){
         temiLocations = robot.getLocations();
@@ -153,6 +177,24 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void robotSpeak(String text){
+        if (!text.equals(TemiConstant.FINISH_INITIAL)){
+            List<Fragment> fragments = getSupportFragmentManager().getFragments();
+            boolean hasGifOrNot = false;
+
+            for (Fragment fragment : fragments){
+                if (fragment instanceof GifTaskFragment){
+                    hasGifOrNot = true;
+                    break;
+                }
+            }
+
+            if (hasGifOrNot == false){
+                GifTaskFragment gifTaskFragment = new GifTaskFragment(MainActivity.this);
+                getSupportFragmentManager().beginTransaction()
+                        .replace(R.id.display_fragment_container,gifTaskFragment)
+                        .commit();
+            }
+        }
         googleTtsUtilities = new GoogleTtsUtilities(MainActivity.this, Locale.CHINA,
                 Voice.QUALITY_VERY_HIGH, Voice.LATENCY_NORMAL, MainActivity.this);
         googleTtsUtilities.textSpeak(text);
@@ -170,6 +212,14 @@ public class MainActivity extends AppCompatActivity implements
         if (hasGone != PackageManager.PERMISSION_GRANTED){
             requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}
             , REQUEST_STORAGE_PERMISSION);
+        }
+    }
+
+    private void checkRecordAudioPermission(){
+        int hasGone = checkSelfPermission(Manifest.permission.RECORD_AUDIO);
+        if (hasGone != PackageManager.PERMISSION_GRANTED){
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},
+                    REQUEST_RECORD_AUDIO);
         }
     }
 
@@ -201,10 +251,10 @@ public class MainActivity extends AppCompatActivity implements
                 }
 
                 if (hasMainFragmentOrNot == false){
-                    MainTaskFragment mainTaskFragment = new MainTaskFragment(MainActivity.this);
+                    mainTaskFragment = new MainTaskFragment(MainActivity.this);
                     FragmentManager fragmentManager = getSupportFragmentManager();
                     fragmentManager.beginTransaction()
-                            .replace(R.id.fragment_container,mainTaskFragment)
+                            .replace(R.id.fragment_container, mainTaskFragment)
                             .commit();
                 }
             }
@@ -253,7 +303,7 @@ public class MainActivity extends AppCompatActivity implements
                                     new VideoTaskFragment(MainActivity.this, currentUriString);
                             getSupportFragmentManager().beginTransaction()
                                     .addToBackStack(MainTaskFragment.class.getSimpleName())
-                                    .replace(R.id.fragment_container,videoTaskFragment)
+                                    .replace(R.id.display_fragment_container,videoTaskFragment)
                                     .commit();
                         }
                     },1000);
@@ -291,14 +341,8 @@ public class MainActivity extends AppCompatActivity implements
                             }
                         },100);
                         break;
-
-                    default:
-                        MainTaskFragment mainTaskFragment = new MainTaskFragment(MainActivity.this);
-                        getSupportFragmentManager().beginTransaction()
-                                .replace(R.id.fragment_container,mainTaskFragment)
-                                .commit();
-                        break;
                 }
+                removeFragment();
                 break;
 
             case TemiConstant.GOOGLE_TTS_START:
@@ -316,10 +360,11 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onVideoPlayEnded(String uriString) {
-        GifTaskFragment gifTaskFragment = new GifTaskFragment(MainActivity.this);
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container,gifTaskFragment)
-                .commit();
+//        GifTaskFragment gifTaskFragment = new GifTaskFragment(MainActivity.this);
+//        getSupportFragmentManager().beginTransaction()
+//                .replace(R.id.fragment_container,gifTaskFragment)
+//                .commit();
+        robotSpeak(IntroductionContent.videoFinishWord);
     }
 
     @Override
@@ -330,11 +375,68 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void gifTaskFragmentLoadFinish() {
-        robotSpeak(IntroductionContent.videoFinishWord);
+
     }
 
     @Override
     public void homeBaseButtonClick() {
         robotGoTo(SpeedLevel.HIGH,TemiConstant.HOME_BASE);
+    }
+
+    @Override
+    public void onPartialResult(String hypothesis) {
+        JsonObject jsonObject = JsonParser
+                .parseString(hypothesis.replace(" ","").replace("\n","")).getAsJsonObject();
+        String text = jsonObject.get("partial").getAsString();
+        Log.d(TAG, "onPartialResult: result is " + text);
+        mainTaskFragment.setSpeechRecognizeResultInTextView(text);
+    }
+
+    @Override
+    public void onResult(String hypothesis) {
+        JsonObject jsonObject = JsonParser
+                .parseString(hypothesis.replace(" ","").replace("\n","")).getAsJsonObject();
+        String text = jsonObject.get("text").getAsString();
+        Log.d(TAG, "onResult: result is " + text);
+        mainTaskFragment.setSpeechRecognizeResultInTextView(text);
+        if (hypothesis.contains("充电")){
+            robotGoTo(SpeedLevel.HIGH,TemiConstant.HOME_BASE);
+            mainTaskFragment.stopSpeechRecognizeDetect();
+        }else if (hypothesis.contains("麦克")){
+            robotSpeak("您好，我是邁克的服務型機器人");
+            mainTaskFragment.stopSpeechRecognizeDetect();
+        } else if (hypothesis.contains("几点")) {
+            Calendar calendar = Calendar.getInstance();
+            Date date = calendar.getTime();
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("HH:mm");
+            String[] timeParts = simpleDateFormat.format(date).split(":");
+            String hour = timeParts[0];
+            String minute = timeParts[1];
+            String speakWord = "現在是" + hour + "點" + minute + "分";
+            robotSpeak(speakWord);
+            mainTaskFragment.stopSpeechRecognizeDetect();
+        } else if (hypothesis.contains("您好") || hypothesis.contains("你好")){
+            robotSpeak("您好，歡迎命令我替您做介紹");
+            mainTaskFragment.stopSpeechRecognizeDetect();
+        } else if (hypothesis.contains("发财") || hypothesis.contains("新年快乐")){
+            robotSpeak("新年快樂，恭喜發財");
+            mainTaskFragment.stopSpeechRecognizeDetect();
+        }
+    }
+
+    @Override
+    public void onFinalResult(String hypothesis) {
+        Log.d(TAG, "onFinalResult: result is " + hypothesis);
+    }
+
+    @Override
+    public void onError(Exception exception) {
+        Log.d(TAG, "onError: ");
+        exception.printStackTrace();
+    }
+
+    @Override
+    public void onTimeout() {
+
     }
 }
