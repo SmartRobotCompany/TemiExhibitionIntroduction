@@ -28,12 +28,14 @@ import com.smartrobot.temidemointroduction.constant.IntroductionContent;
 import com.smartrobot.temidemointroduction.constant.TemiConstant;
 import com.smartrobot.temidemointroduction.constant.VideoConstant;
 import com.smartrobot.temidemointroduction.fragment.GifTaskFragment;
+import com.smartrobot.temidemointroduction.fragment.LoadingPageFragment;
 import com.smartrobot.temidemointroduction.fragment.MainTaskFragment;
 import com.smartrobot.temidemointroduction.fragment.VideoTaskFragment;
 import com.smartrobot.temidemointroduction.listener.OnGifTaskFragmentActionListener;
 import com.smartrobot.temidemointroduction.listener.OnGoHomeBaseButtonClickListener;
 import com.smartrobot.temidemointroduction.listener.OnGoogleTtsStatusListener;
 import com.smartrobot.temidemointroduction.listener.OnIntroductionButtonClickListener;
+import com.smartrobot.temidemointroduction.listener.OnLoadingPageFragmentNeedShowCloseListener;
 import com.smartrobot.temidemointroduction.listener.OnVideoPlayStatusListener;
 import com.smartrobot.temidemointroduction.utilities.GoogleTtsUtilities;
 
@@ -57,7 +59,8 @@ public class MainActivity extends AppCompatActivity implements
         OnIntroductionButtonClickListener,
         OnGifTaskFragmentActionListener,
         OnGoHomeBaseButtonClickListener,
-        RecognitionListener {
+        RecognitionListener,
+        OnLoadingPageFragmentNeedShowCloseListener {
 
     static final String TAG = "Debug_" + MainActivity.class.getSimpleName();
 
@@ -71,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements
     private GoogleTtsUtilities googleTtsUtilities;
     private String currentUriString;
     private MainTaskFragment mainTaskFragment;
+    private LoadingPageFragment loadingPageFragment;
 
 
     @Override
@@ -136,6 +140,7 @@ public class MainActivity extends AppCompatActivity implements
                 break;
             }
         }
+
     }
     private void locationInitial(){
         temiLocations = robot.getLocations();
@@ -193,6 +198,7 @@ public class MainActivity extends AppCompatActivity implements
                 getSupportFragmentManager().beginTransaction()
                         .replace(R.id.display_fragment_container,gifTaskFragment)
                         .commit();
+                mainTaskFragment.disableButtoInMainTaskFragment();
             }
         }
         googleTtsUtilities = new GoogleTtsUtilities(MainActivity.this, Locale.CHINA,
@@ -254,7 +260,7 @@ public class MainActivity extends AppCompatActivity implements
                     mainTaskFragment = new MainTaskFragment(MainActivity.this);
                     FragmentManager fragmentManager = getSupportFragmentManager();
                     fragmentManager.beginTransaction()
-                            .replace(R.id.fragment_container, mainTaskFragment)
+                            .replace(R.id.main_task_fragment_container, mainTaskFragment)
                             .commit();
                 }
             }
@@ -305,6 +311,7 @@ public class MainActivity extends AppCompatActivity implements
                                     .addToBackStack(MainTaskFragment.class.getSimpleName())
                                     .replace(R.id.display_fragment_container,videoTaskFragment)
                                     .commit();
+                            mainTaskFragment.disableButtoInMainTaskFragment();
                         }
                     },1000);
                 }
@@ -343,6 +350,7 @@ public class MainActivity extends AppCompatActivity implements
                         break;
                 }
                 removeFragment();
+                mainTaskFragment.enableButtoInMainTaskFragment();
                 break;
 
             case TemiConstant.GOOGLE_TTS_START:
@@ -360,10 +368,6 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onVideoPlayEnded(String uriString) {
-//        GifTaskFragment gifTaskFragment = new GifTaskFragment(MainActivity.this);
-//        getSupportFragmentManager().beginTransaction()
-//                .replace(R.id.fragment_container,gifTaskFragment)
-//                .commit();
         robotSpeak(IntroductionContent.videoFinishWord);
     }
 
@@ -465,5 +469,22 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onTimeout() {
 
+    }
+
+    @Override
+    public void loadingPageFragmentNeedShow() {
+        loadingPageFragment = new LoadingPageFragment();
+        getSupportFragmentManager().beginTransaction()
+                .replace(R.id.loading_page_fragment_container, loadingPageFragment)
+                .commit();
+        mainTaskFragment.disableButtoInMainTaskFragment();
+    }
+
+    @Override
+    public void loadingPageFragmentNeedClose() {
+        if (loadingPageFragment != null){
+            getSupportFragmentManager().beginTransaction().remove(loadingPageFragment).commit();
+            mainTaskFragment.enableButtoInMainTaskFragment();
+        }
     }
 }

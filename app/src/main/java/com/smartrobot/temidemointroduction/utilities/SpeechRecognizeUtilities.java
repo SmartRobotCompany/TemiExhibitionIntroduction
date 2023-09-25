@@ -1,8 +1,12 @@
 package com.smartrobot.temidemointroduction.utilities;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
+
+import com.smartrobot.temidemointroduction.listener.OnLoadingPageFragmentNeedShowCloseListener;
 
 import org.vosk.LibVosk;
 import org.vosk.LogLevel;
@@ -20,12 +24,13 @@ import java.util.concurrent.Executors;
 public class SpeechRecognizeUtilities {
     private final static String TAG = "Debug_" + SpeechRecognizeUtilities.class.getSimpleName();
     private Context context;
+    private OnLoadingPageFragmentNeedShowCloseListener onLoadingPageFragmentNeedShowCloseListener;
     private SpeechService speechService;
-    private SpeechStreamService speechStreamService;
     private Model model;
 
     public SpeechRecognizeUtilities(Context context){
         this.context = context;
+        this.onLoadingPageFragmentNeedShowCloseListener = (OnLoadingPageFragmentNeedShowCloseListener) context;
 //        LibVosk.setLogLevel(LogLevel.INFO);s
         initModel();
     }
@@ -34,7 +39,13 @@ public class SpeechRecognizeUtilities {
         StorageService.unpack(context,"model-en-us","model",
                 (model) -> {this.model = model;},
                 (exception) -> Log.d(TAG, "initiModel: Failed to unpack the model" + exception.getMessage()));
-        Toast.makeText(context,"OK",Toast.LENGTH_SHORT).show();
+        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                onLoadingPageFragmentNeedShowCloseListener.loadingPageFragmentNeedClose();
+                Toast.makeText(context,"OK",Toast.LENGTH_SHORT).show();
+            }
+        },8000);
     }
 
     public void startSpeakRecognize(){

@@ -26,6 +26,7 @@ import com.smartrobot.temidemointroduction.R;
 import com.smartrobot.temidemointroduction.constant.VideoConstant;
 import com.smartrobot.temidemointroduction.listener.OnGoHomeBaseButtonClickListener;
 import com.smartrobot.temidemointroduction.listener.OnIntroductionButtonClickListener;
+import com.smartrobot.temidemointroduction.listener.OnLoadingPageFragmentNeedShowCloseListener;
 import com.smartrobot.temidemointroduction.utilities.SpeechRecognizeUtilities;
 
 import java.util.concurrent.ExecutorService;
@@ -45,6 +46,8 @@ public class MainTaskFragment extends Fragment {
     private Context context;
     private OnIntroductionButtonClickListener onIntroductionButtonClickListener;
     private OnGoHomeBaseButtonClickListener onGoHomeBaseButtonClickListener;
+
+    private OnLoadingPageFragmentNeedShowCloseListener onLoadingPageFragmentNeedShowCloseListener;
     private SpeechRecognizeUtilities speechRecognizeUtilities;
 
 
@@ -52,6 +55,7 @@ public class MainTaskFragment extends Fragment {
         this.context = context;
         this.onIntroductionButtonClickListener = (OnIntroductionButtonClickListener) context;
         this.onGoHomeBaseButtonClickListener = (OnGoHomeBaseButtonClickListener) context;
+        this.onLoadingPageFragmentNeedShowCloseListener = (OnLoadingPageFragmentNeedShowCloseListener) context;
     }
 
     @Nullable
@@ -90,6 +94,8 @@ public class MainTaskFragment extends Fragment {
         buttonOnClickActionSetting(nova5_introduction_button);
         buttonOnClickActionSetting(Mg400_introduction_button);
         buttonOnClickActionSetting(voice_command_button);
+
+        onLoadingPageFragmentNeedShowCloseListener.loadingPageFragmentNeedShow();
     }
 
     @Override
@@ -97,6 +103,7 @@ public class MainTaskFragment extends Fragment {
         super.onStart();
         Log.d(TAG, "onStart: ");
         speechRecognizeUtilities = new SpeechRecognizeUtilities(context);
+
     }
 
     private final ActivityResultLauncher<String[]> videoFilePickerLauncher = registerForActivityResult(
@@ -144,17 +151,84 @@ public class MainTaskFragment extends Fragment {
                     case R.id.voice_command_button:
                         current_speech_recognize_textview.setVisibility(View.VISIBLE);
                         speechRecognizeUtilities.startSpeakRecognize();
-//                        new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-//                            @Override
-//                            public void run() {
-//                                speechRecognizeUtilities.stopSpeakRecognize();
-//                            }
-//                        },8000);
                         break;
 
                 }
             }
         });
+    }
+
+    public void disableButtoInMainTaskFragment(){
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "enableButtoInMainTaskFragment: disable");
+                if (go_homebase_button.isEnabled() == true){
+                    go_homebase_button.setEnabled(false);
+                }
+
+                if (temi_introduction_button.isEnabled() == true){
+                    temi_introduction_button.setEnabled(false);
+                }
+
+                if (thouzer_introduction_button.isEnabled() == true){
+                    thouzer_introduction_button.setEnabled(false);
+                }
+
+                if (nova5_introduction_button.isEnabled() == true){
+                    nova5_introduction_button.setEnabled(false);
+                }
+
+                if (Mg400_introduction_button.isEnabled() == true){
+                    Mg400_introduction_button.setEnabled(false);
+                }
+
+                if (uri_permission_setting_imagebutton.isEnabled() == true){
+                    uri_permission_setting_imagebutton.setEnabled(false);
+                }
+
+                if (voice_command_button.isEnabled() == true){
+                    voice_command_button.setEnabled(false);
+                }
+            }
+        });
+    }
+
+    public void enableButtoInMainTaskFragment(){
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                Log.d(TAG, "enableButtoInMainTaskFragment: enable");
+                if (go_homebase_button.isEnabled() == false){
+                    go_homebase_button.setEnabled(true);
+                }
+
+                if (temi_introduction_button.isEnabled() == false){
+                    temi_introduction_button.setEnabled(true);
+                }
+
+                if (thouzer_introduction_button.isEnabled() == false){
+                    thouzer_introduction_button.setEnabled(true);
+                }
+
+                if (nova5_introduction_button.isEnabled() == false){
+                    nova5_introduction_button.setEnabled(true);
+                }
+
+                if (Mg400_introduction_button.isEnabled() == false){
+                    Mg400_introduction_button.setEnabled(true);
+                }
+
+                if (uri_permission_setting_imagebutton.isEnabled() == false){
+                    uri_permission_setting_imagebutton.setEnabled(true);
+                }
+
+                if (voice_command_button.isEnabled() == false){
+                    voice_command_button.setEnabled(true);
+                }
+            }
+        });
+
     }
 
     public void stopSpeechRecognizeDetect(){
